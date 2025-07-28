@@ -1,0 +1,3 @@
+nohup: ignoring input
+[dotenv@17.2.1] injecting env (2) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+Backend server is running on http://localhost:5000
