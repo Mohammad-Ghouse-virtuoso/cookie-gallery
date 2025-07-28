@@ -1,69 +1,59 @@
-# React + TypeScript + Vite
+# 🍪 Cookie Gallery
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Welcome to the Cookie Gallery, a modern, full-stack e-commerce application for a delightful cookie store. This project features an interactive and animated frontend built with React and a secure backend powered by Node.js for handling payments with Razorpay.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*   **Aesthetic Hero Section**: A beautiful, full-width hero to welcome users.
+*   **Interactive Cookie Showcase**: A responsive gallery of cookies with hover animations using Framer Motion.
+*   **Dynamic Shopping Cart**: Add, remove, and update cookie quantities with a temporary state that resets on reload.
+*   **Secure Payment Integration**: A complete payment flow handled by a dedicated Node.js backend using the Razorpay SDK.
+*   **Modern UI**: A clean user interface styled with Tailwind CSS.
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Frontend                                | Backend                               |
+| --------------------------------------- | ------------------------------------- |
+| [React](https://reactjs.org/)           | [Node.js](https://nodejs.org/)        |
+| [TypeScript](https://www.typescriptlang.org/) | [Express](https://expressjs.com/)     |
+| [Vite](https://vitejs.dev/)             | [Razorpay SDK](https://razorpay.com/docs/payment-gateway/server-integration/nodejs/) |
+| [Tailwind CSS](https://tailwindcss.com/)| [CORS](https://www.npmjs.com/package/cors) |
+| [Framer Motion](https://www.framer.com/motion/) | [Dotenv](https://www.npmjs.com/package/dotenv) |
+| [React Router](https://reactrouter.com/)|                                       |
+| [React Icons](https://react-icons.github.io/react-icons/)|                                 |
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+*   Node.js (v18.x or later recommended)
+*   npm
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Installation & Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1.  **Clone the repository:**
+    ```
+    git clone https://github.com/your-username/cookie-gallery.git
+    cd cookie-gallery
+    ```
+2.  **Install Frontend & Backend Dependencies:**
+    ```
+    npm install
+    cd backend
+    npm install
+    cd ..
+    ```
+### Environment Variables
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1.  **Frontend (`/.env`):**
+    ```
+    VITE_RAZORPAY_KEY_ID=rzp_test_YourPublicKeyHere
+    ```
+2.  **Backend (`/backend/.env`):**
+    ```
+    RAZORPAY_KEY_ID=rzp_test_YourPublicKeyHere
+    RAZORPAY_KEY_SECRET=YourSecretKeyHere
+    ```
+### Running the Application
+
+Start both the frontend and backend servers with a single command from the root directory:
