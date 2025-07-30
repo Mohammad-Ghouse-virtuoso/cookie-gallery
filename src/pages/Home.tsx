@@ -1,8 +1,7 @@
 // src/pages/Home.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { cookies as cookieList, type CookieData } from '../data/cookies'; // Importing from your data file
 import { useCart } from '../context/CartContext';
-import { formatPrice } from '../utils/formatPrice';
 import { FaInstagram, FaTwitter, FaFacebook } from 'react-icons/fa'; // Ensure react-icons is installed
 import { Link } from 'react-router-dom';
 
