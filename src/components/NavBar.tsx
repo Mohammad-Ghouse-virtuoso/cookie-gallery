@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Link } from 'react-router-dom';
 import { FaCookieBite } from 'react-icons/fa';
 
@@ -23,10 +23,18 @@ export default function NavBar() {
         </Link>
         <Link
           to="/checkout"
-          className="px-3 py-2 sm:px-4 sm:py-2 rounded-full text-gray -700 hover:bg-orange-200 hover:text-teal-800 font-medium transition-all duration-200 text-base sm:text-lg"
+          className="px-3 py-2 sm:px-4 sm:py-2 rounded-full text-gray-700 hover:bg-orange-200 hover:text-teal-800 font-medium transition-all duration-200 text-base sm:text-lg"
         >
           Checkout
         </Link>
+          <div className="flex items-center space-x-2">
+          <Link
+            to="/signed-out"
+            className="px-5 py-2 sm:px-4 sm:py-2 rounded-full text-gray-700 hover:bg-orange-200 hover:text-teal-800 font-medium transition-all duration-200 text-base sm:text-lg"
+          >
+            SignOut
+          </Link>
+        </div>
       </div>
     </nav>
   );
