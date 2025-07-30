@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 import { useCart } from "../context/CartContext";
 import { cookies as cookieList } from "../data/cookies";
 import { formatPrice } from "../utils/formatPrice";
-import sadCookie from "../assets/sad-cookie.jpg";
+import sadCookie from "../assets/Cookie!.png";
 
 // This is the Razorpay script loader
 function loadScript(src: string): Promise<boolean> {
@@ -159,11 +159,16 @@ export default function Checkout() {
 
   if (selectedCookies.length === 0) {
     return (
-      <main className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-gray-50 text-center p-4 font-inter antialiased">
-        <img src={sadCookie} alt="Sad Cookie" className="w-40 h-40 mb-4 opacity-80" />
-        <h2 className="text-3xl font-bold text-teal-700">Your bag is empty... :( </h2>
+      <main 
+        className="min-h-screen w-full flex flex-col items-center justify-center text-center p-4 font-inter antialiased"
+        style={{
+          background: 'linear-gradient(to bottom right,rgb(252, 252, 252),rgb(252, 251, 250))'
+        }}
+      >
+        <img src={sadCookie} alt="Sad Cookie" className="w-40 h-40 mb-5 opacity-80" />
+        <h2 className="text-3xl font-bold text-gray-400">Your bag is empty... :( </h2>
         <p className="text-gray-600 mt-2 mb-6 text-lg">Add some delicious cookies to make your day sweeter!</p>
-        <Link to="/" className="text-lg px-8 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg hover:bg-teal-700 transition-transform hover:scale-105">
+        <Link to="/" className="text-lg px-8 py-3 bg-stone-200 text-white rounded-full font-bold shadow-lg hover:bg-blue-100 transition-transform hover:scale-105">
           Browse Cookies
         </Link>
       </main>
@@ -171,7 +176,12 @@ export default function Checkout() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-start justify-center p-4 sm:p-8 font-inter antialiased">
+    <main 
+      className="min-h-screen flex items-start justify-center p-4 sm:p-8 font-inter antialiased"
+      style={{
+        background: 'linear-gradient(to bottom right, #f8f9ff, #fafbfc)'
+      }}
+    >
       <div className="w-full max-w-lg lg:max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
         <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6">Your Order Summary</h1>
         <p className="text-center text-gray-500 mb-8 italic">Ready to treat yourself? Let's get this batch to you!</p>

@@ -10,6 +10,11 @@ export default {
         fontFamily: {
           inter: ['Inter', 'sans-serif']
         },
+        fontWeight: {
+          'inter-bold': '700',
+          'inter-extrabold': '800',
+          'inter-black': '900',
+        }
       },
     },
     plugins: [],

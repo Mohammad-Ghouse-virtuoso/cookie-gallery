@@ -1,7 +1,5 @@
-// src/components/Hero.tsx
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom'; // Or a scroll-to link
+import { Link } from 'react-router-dom';
 import { FaArrowRight } from 'react-icons/fa';
 import heroImage from '../assets/Hero-cookie-platter.jpg'; // IMPORTANT: Ensure this path is correct and image exists
 
@@ -20,8 +18,8 @@ export default function Hero() {
             Handcrafted Cookies,
             <span className="block text-rose-600">Baked with Love 🩷</span>
           </h1>
-          <p className="mt-6 font-semibold align text-lg text-gray-600 max-w-md mx-auto md:mx-0">
-            Indulge in our exquisite collection of handcrafted cookies, made with love and the finest locally-sourced ingredients for a truly unforgettable treat.
+          <p className="mt-6 text-lg text-gray-600 max-w-md mx-auto md:mx-0">
+            Indulge in our exquisite collection of handcrafted cookies, made with love and the finest ingredients.
           </p>
           <div className="mt-8">
             <Link
@@ -37,7 +35,7 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Image Content */}
+        {/* Image Content with Original (Subtle Rotate & Scale) Hover Style */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -47,9 +45,19 @@ export default function Hero() {
           <img 
             src={heroImage} 
             alt="A delicious platter of assorted cookies" 
-            className="w-full max-w-md md:max-w-full rounded-2xl shadow-2xl object-cover"
+            className={`
+              w-full max-w-md md:max-w-full rounded-2xl object-cover
+              transform origin-center
+              shadow-2xl rotate-3 transition-transform duration-500 ease-in-out hover:rotate-0 hover:scale-105
+            `}
           />
         </motion.div>
+      </div>
+
+      {/* Subtle background shapes for visual appeal */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <div className="absolute w-64 h-64 bg-teal-200 rounded-full opacity-20 -top-10 -left-10 blur-2xl"></div>
+        <div className="absolute bottom-20 right-20 w-32 h-32 bg-blue-200 rounded-full opacity-15 bottom-0 -right-20 blur-2xl"></div>
       </div>
     </section>
   );
