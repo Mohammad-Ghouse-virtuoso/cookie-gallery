@@ -57,3 +57,6 @@ Welcome to the Cookie Gallery, a modern, full-stack e-commerce application for a
 ### Running the Application
 
 Start both the frontend and backend servers with a single command from the root directory:
+
+
+Note: Procuring credentials from Razorpay is mandatory. 
