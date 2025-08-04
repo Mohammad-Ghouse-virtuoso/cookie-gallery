@@ -1,11 +1,12 @@
 // src/pages/Checkout.tsx
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { cookies as cookieList } from "../data/cookies";
 import { formatPrice } from "../utils/formatPrice";
 import sadCookie from "../assets/Cookie!.png";
+import { useAuth } from '../context/AuthContext';
 
 // This is the Razorpay script loader
 function loadScript(src: string): Promise<boolean> {
@@ -33,14 +34,22 @@ declare global {
 }
 
 export default function Checkout() {
-  const { cart, setCart } = useCart(); // Get setCart to clear the cart
-  const navigate = useNavigate(); // Initialize useNavigate for redirection
+  const { cart, setCart } = useCart();
+  const navigate = useNavigate();
+  const { user } = useAuth(); // Get user from AuthContext
 
   const selectedCookies = cookieList.filter(cookie => cart[cookie.id] > 0);
   const totalAmount = selectedCookies.reduce((sum, cookie) => sum + (cart[cookie.id] * cookie.price), 0);
 
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // useEffect to ensure user data is loaded before proceeding
+  useEffect(() => {
+    if (user) {
+      console.log("Checkout: User data is available.");
+    }
+  }, [user]);
 
   const handlePayment = async () => {
     console.log("handlePayment function started.");
@@ -73,7 +82,7 @@ export default function Checkout() {
 
       const order = await orderResponse.json();
       console.log("Order created successfully by backend:", order);
-
+      
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -110,12 +119,10 @@ export default function Checkout() {
 
               if (verificationResult.success) {
                 setMessage(`Payment successful! Payment ID: ${response.razorpay_payment_id}. Order Verified.`);
-                // --- SUCCESS ACTIONS ---
-                setCart({}); // Clear the cart
-                // Redirect to a success page after a short delay for message visibility
+                setCart({});
                 setTimeout(() => {
-                  navigate('/order-success'); // Assuming you have an /order-success route
-                }, 2000); 
+                  navigate('/order-success');
+                }, 2000);
               } else {
                 setMessage(`Payment verification failed: ${verificationResult.message}. Please contact support.`);
               }
@@ -124,17 +131,16 @@ export default function Checkout() {
               setMessage("Error during payment verification. Please contact support.");
             }
           } else {
-            // This part handles cases where Razorpay returns an error, or user cancels
-            // The 'response' object might contain error details here
             setMessage("Payment failed or was cancelled.");
             console.error("Payment response (failure/cancellation):", response);
           }
-          setIsLoading(false); // Clear loading after handler completes
+          setIsLoading(false);
         },
         prefill: {
-          name: "Cookie Lover",
-          email: "cookielover@example.com",
-          contact: "9999999999",
+          // <--- UPDATED: Use user's data from AuthContext
+          name: user?.displayName || "Cookie Lover",
+          email: user?.email || "cookielover@example.com",
+          contact: user?.phoneNumber || "9999999999",
         },
         theme: {
           color: "#10B981",
@@ -159,7 +165,7 @@ export default function Checkout() {
 
   if (selectedCookies.length === 0) {
     return (
-      <main 
+      <main
         className="min-h-screen w-full flex flex-col items-center justify-center text-center p-4 font-inter antialiased"
         style={{
           background: 'linear-gradient(to bottom right,rgb(252, 252, 252),rgb(252, 251, 250))'
@@ -176,13 +182,13 @@ export default function Checkout() {
   }
 
   return (
-    <main 
+    <main
       className="min-h-screen flex items-start justify-center p-4 sm:p-8 font-inter antialiased"
       style={{
         background: 'linear-gradient(to bottom right, #f8f9ff, #fafbfc)'
       }}
     >
-      <div className="w-full max-w-lg lg:max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6">
+      <div className="w-full max-w-lg lg:max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6 relative">
         <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6">Your Order Summary</h1>
         <p className="text-center text-gray-500 mb-8 italic">Ready to treat yourself? Let's get this batch to you!</p>
         
@@ -209,7 +215,7 @@ export default function Checkout() {
           <span className="text-3xl font-extrabold text-teal-800">{formatPrice(totalAmount)}</span>
         </div>
 
-        {message && ( // Display messages to the user
+        {message && (
           <div className={`mt-4 p-3 rounded-lg text-center ${message.includes('successful') || message.includes('Verified') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
             {message}
           </div>
@@ -217,7 +223,7 @@ export default function Checkout() {
         
         <button
           onClick={handlePayment}
-          disabled={isLoading} // Disable button while loading
+          disabled={isLoading}
           className={`w-full text-white text-xl font-bold py-4 px-6 rounded-xl shadow-lg transform transition-all duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-teal-300
             ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-teal-600 hover:bg-teal-700 hover:scale-105 active:scale-95'}`}
         >
