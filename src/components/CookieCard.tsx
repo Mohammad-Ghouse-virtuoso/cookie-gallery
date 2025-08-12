@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { formatPrice } from '../utils/formatPrice';
-import type { CookieData } from '../data/cookies'; // Assuming CookieData type is defined in data/cookies.ts
+import type { CookieData } from '../data/cookies';
 
 interface CookieCardProps {
   cookie: CookieData;
@@ -12,6 +12,9 @@ interface CookieCardProps {
 }
 
 const CookieCard: React.FC<CookieCardProps> = ({ cookie, quantity, onChange, onShowDetails }) => {
+  const maxQuantity = 10;
+  const isMaxQuantity = quantity >= maxQuantity;
+
   return (
     <div className="bg-white rounded-2xl shadow-lg p-4 flex flex-col items-center text-center transition-all duration-300 hover:shadow-xl hover:scale-105 border border-gray-100">
       {/* Cookie Image */}
@@ -27,28 +30,37 @@ const CookieCard: React.FC<CookieCardProps> = ({ cookie, quantity, onChange, onS
       <p className="text-lg font-semibold text-teal-700 mb-3">{formatPrice(cookie.price)}</p>
 
       {/* Quantity Controls */}
-      <div className="flex items-center justify-center space-x-2 mb-4">
+      <div className="flex items-center justify-center space-x-2 mb-2"> {/* Fix: Changed mb-4 to mb-2 to make space for the new message */}
         <button
           onClick={() => onChange(quantity - 1)}
-          className="bg-gray-200 text-white-600 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold hover:bg-pink-200 transition-colors"
+          className={`bg-ocean-200 text-white-100 rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold transition-colors
+            ${quantity > 0 ? 'hover:bg-orange-200' : 'cursor-not-allowed opacity-50'}`}
           aria-label="Decrease quantity"
+          disabled={quantity <= 0}
         >
           -
         </button>
         <span className="text-xl font-bold text-gray-800 w-8 text-center">{quantity}</span>
         <button
           onClick={() => onChange(quantity + 1)}
-          className="bg-teal-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold hover:bg-teal-700 transition-colors"
+          className={`text-white rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold transition-colors
+            ${isMaxQuantity ? 'bg-gray-400 cursor-not-allowed opacity-50' : 'bg-teal-600 hover:bg-teal-700'}`}
           aria-label="Increase quantity"
+          disabled={isMaxQuantity}
         >
           +
         </button>
       </div>
+      
+      {/* Optional message when max quantity is reached */}
+      {isMaxQuantity && (
+        <p className="text-sm text-rose-500 font-medium animate-pulse">Max quantity reached!</p>
+      )}
 
       {/* Details Button */}
       <button
         onClick={onShowDetails}
-        className="text-sm text-stone-300 hover:underline transition-colors font-semibold"
+        className="text-sm text-stone-300 hover:underline transition-colors mt-2 font-semibold"
       >
         View Details
       </button>

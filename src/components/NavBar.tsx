@@ -1,40 +1,66 @@
+// src/components/NavBar.tsx
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaCookieBite } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 export default function NavBar() {
+  const { user, loading, signOutUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOutClick = async () => {
+    try {
+      await signOutUser();
+      navigate('/signed-out');
+    } catch (error) {
+      console.error("Error signing out from NavBar:", error);
+    }
+  };
+
   return (
     <nav className="bg-white shadow-md py-4 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-50 font-inter antialiased">
       {/* Logo and Site Title */}
       <div className="flex items-center space-x-2">
-        <FaCookieBite className="text-teal-600 text-3xl" /> {/* Icon for cookie */}
+        <FaCookieBite className="text-teal-600 text-3xl" />
         <Link to="/" className="text-2xl font-extrabold text-gray-800 hover:text-teal-700 transition-colors">
-        Cookie Gallery 🍪
+          Cookie Gallery 🍪
         </Link>
       </div>
 
       {/* Navigation Links */}
-      <div className="flex items-center space-x-2 sm:space-x-4"> {/* Adjusted spacing for smaller screens */}
-        <Link
-          to="/"
-          className="px-5 py-2 sm:px-4 sm:py-2 rounded-full text-gray-700 hover:bg-orange-200 hover:text-teal-800 font-medium transition-all duration-200 text-base sm:text-lg"
-        >
-          Home
-        </Link>
-        <Link
-          to="/checkout"
-          className="px-3 py-2 sm:px-4 sm:py-2 rounded-full text-gray-700 hover:bg-orange-200 hover:text-teal-800 font-medium transition-all duration-200 text-base sm:text-lg"
-        >
-          Checkout
-        </Link>
-          <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 sm:space-x-4">
+        {/* Hide links while auth loading or when user is not logged in */}
+        {loading || !user ? (
           <Link
-            to="/signed-out"
-            className="px-5 py-2 sm:px-4 sm:py-2 rounded-full text-gray-700 hover:bg-orange-200 hover:text-teal-800 font-medium transition-all duration-200 text-base sm:text-lg"
+            to="/signin"
+            className="px-5 py-2 sm:px-4 sm:py-2 rounded-full text-gray-800 bg-orange-200 font-bold transition-all duration-200 text-base sm:text-lg hover:bg-orange-300"
           >
-            SignOut
+            Sign In
           </Link>
-        </div>
+        ) : (
+          <>
+            <Link
+              to="/"
+              className="px-5 py-2 sm:px-4 sm:py-2 rounded-full text-gray-700 hover:bg-orange-200 hover:text-teal-800 font-medium transition-all duration-200 text-base sm:text-lg"
+            >
+              Home
+            </Link>
+            <Link
+              to="/checkout"
+              className="px-3 py-2 sm:px-4 sm:py-2 rounded-full text-gray-700 hover:bg-orange-200 hover:text-teal-800 font-medium transition-all duration-200 text-base sm:text-lg"
+            >
+              Checkout
+            </Link>
+
+            {/* Sign Out Button when logged in */}
+            <button
+              onClick={handleSignOutClick}
+              className="px-5 py-2 sm:px-4 sm:py-2 rounded-full text-white bg-red-500 font-bold transition-all duration-200 text-base sm:text-lg hover:bg-red-600"
+            >
+              Sign Out
+            </button>
+          </>
+        )}
       </div>
     </nav>
   );

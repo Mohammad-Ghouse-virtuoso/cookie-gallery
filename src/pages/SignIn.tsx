@@ -1,42 +1,20 @@
 // src/pages/SignIn.tsx
 
 import { useState, useEffect, useRef } from 'react';
-import { initializeApp } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithPhoneNumber,
-  signInWithCustomToken,
-  signInAnonymously,
-  onAuthStateChanged,
-  RecaptchaVerifier
+  RecaptchaVerifier,
+  signInWithPopup,
 } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-// Google SVG component (inline fallback)
-const GoogleSVG = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12.24 10.21V14.12H18.47C18.36 14.86 18.06 15.6 17.65 16.29C17.24 16.98 16.7 17.62 16.03 18.19C15.36 18.76 14.6 19.25 13.78 19.64C12.96 20.03 12.08 20.32 11.16 20.48C9.52 20.76 7.78 20.67 6.18 20.21C4.58 19.75 3.16 18.93 2.02 17.82C0.88 16.71 0.1 15.34 0.01 13.88H4.01C4.01 14.65 4.19 15.39 4.54 16.08C4.89 16.77 5.39 17.38 5.99 17.89C6.59 18.4 7.28 18.79 8.02 19.08C8.76 19.37 9.55 19.49 10.35 19.49C11.15 19.49 11.94 19.37 12.68 19.08C13.42 18.79 14.11 18.4 14.71 17.89C15.31 17.38 15.81 16.77 16.16 16.08C16.51 15.39 16.69 14.65 16.69 13.88H12.24V10.21Z" fill="#EA4335"/>
-    <path d="M0.01 13.88C0.1 12.42 0.88 11.05 2.02 9.94C3.16 8.83 4.58 8.01 6.18 7.55C7.78 7.09 9.52 7.00 11.16 7.28C12.96 7.67 14.6 8.36 16.03 9.38C17.46 10.4 18.66 11.75 19.5 13.31L15.47 16.29C15.06 15.6 14.76 14.86 14.65 14.12H12.24V10.21H18.47V14.12H12.24V10.21Z" fill="#FBBC05"/>
-    <path d="M12.24 10.21V14.12H18.47V10.21H12.24Z" fill="#4285F4"/>
-    <path d="M12.24 10.21V14.12H18.47C18.36 14.86 18.06 15.6 17.65 16.29C17.24 16.98 16.7 17.62 16.03 18.19C15.36 18.76 14.6 19.25 13.78 19.64C12.96 20.03 12.08 20.32 11.16 20.48C9.52 20.76 7.78 20.67 6.18 20.21C4.58 19.75 3.16 18.93 2.02 17.82C0.88 16.71 0.1 15.34 0.01 13.88H4.01C4.01 14.65 4.19 15.39 4.54 16.08C4.89 16.77 5.39 17.38 5.99 17.89C6.59 18.4 7.28 18.79 8.02 19.08C8.76 19.37 9.55 19.49 10.35 19.49C11.15 19.49 11.94 19.37 12.68 19.08C13.42 18.79 14.11 18.4 14.71 17.89C15.31 17.38 15.81 16.77 16.16 16.08C16.51 15.39 16.69 14.65 16.69 13.88H12.24V10.21Z" fill="#34A853"/>
-    <path d="M12.24 10.21V14.12H18.47V10.21H12.24Z" fill="#4285F4"/>
-  </svg>
-);
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-declare const __app_id: string | undefined;
-declare const __initial_auth_token: string | undefined;
+// IMPORTANT: Assume you have a file at this path.
+import googleLogoUrl from '../assets/google-icon.svg';
 
 declare global {
   interface Window {
@@ -46,91 +24,67 @@ declare global {
 }
 
 export default function SignIn() {
-  const [user, setUser] = useState<any>(null);
+  const { user, loading } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
 
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const [authInstance, setAuthInstance] = useState<any>(null);
+  const [authInstance] = useState(() => getAuth());
 
-  // Initialize Firebase Auth and Firestore once
+  // If already signed in, redirect away from /signin to home
   useEffect(() => {
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const firestore = getFirestore(app);
-
-    setAuthInstance(auth);
-
-    const setupAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-          console.log("Signed in with custom token.");
-        } else {
-          await signInAnonymously(auth);
-          console.log("Signed in anonymously.");
-        }
-      } catch (error: any) {
-        console.error("Initial authentication failed:", error);
-        setMessage(`Auth error: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    setupAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (currentUser && !currentUser.isAnonymous && firestore) {
-        saveUserProfileToFirestore(currentUser, firestore);
-      }
-      if (currentUser && !currentUser.isAnonymous && !loading) {
-        navigate('/');
-      }
-    });
-
-    return () => unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, navigate]);
-
-  async function saveUserProfileToFirestore(user: any, firestore: any) {
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const userRef = doc(firestore, "artifacts", appId, "users", user.uid, "profile", "data");
-
-    try {
-      const docSnap = await getDoc(userRef);
-      if (!docSnap.exists()) {
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email || null,
-          displayName: user.displayName || null,
-          phoneNumber: user.phoneNumber || null,
-          createdAt: new Date(),
-        });
-        console.log("User profile saved to Firestore.");
-      }
-    } catch (error: any) {
-      console.error("Error saving user profile to Firestore:", error);
-      setMessage(`Firestore error: ${error.message}`);
+    if (!loading && user) {
+      console.log('SignIn: user already signed in, redirecting to /home');
+      navigate('/home', { replace: true });
     }
-  }
+  }, [user, loading, navigate]);
+
+  // Handle redirect result (Google sign-in) on page load
+  useEffect(() => {
+    (async () => {
+      try {
+        const result = await getRedirectResult(authInstance);
+        if (result && result.user) {
+          console.log('SignIn: getRedirectResult returned user, redirecting to /home');
+          setMessage('Successfully signed in with Google!');
+          navigate('/home', { replace: true });
+        } else {
+          console.log('SignIn: getRedirectResult returned no user');
+        }
+      } catch (e: any) {
+        setMessage(`Google Sign-In failed: ${e.message}`);
+      }
+    })();
+  }, [authInstance, navigate]);
+
+
+  // IMPORTANT: The redirect logic is handled by ProtectedRoutes, so SignIn doesn't need its own redirect.
+  // The user is already redirected to /home by the ProtectedRoutes component after successful sign-in.
+
 
   const handleGoogleSignIn = async () => {
     setAuthLoading(true);
     setMessage('');
     try {
-      if (!authInstance) throw new Error("Firebase Auth not initialized.");
+      const auth = authInstance || getAuth();
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(authInstance, provider);
-      setMessage('Successfully signed in with Google!');
-      navigate('/');
+      provider.setCustomParameters({ prompt: 'select_account' });
+      try {
+        console.log('SignIn: attempting signInWithPopup');
+        const result = await signInWithPopup(auth, provider);
+        console.log('SignIn: signInWithPopup success for uid:', result.user?.uid);
+        navigate('/home', { replace: true });
+        return;
+      } catch (popupErr: any) {
+        console.warn('SignIn: signInWithPopup failed, falling back to redirect', popupErr?.code || popupErr?.message);
+        await signInWithRedirect(auth, provider);
+        return;
+      }
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user') {
         setMessage('Google Sign-In cancelled.');
@@ -144,7 +98,6 @@ export default function SignIn() {
     }
   };
 
-  // Fix for reCAPTCHA: Properly clear previous reCAPTCHA before re-initializing
   const handleSendOtp = async () => {
     setAuthLoading(true);
     setMessage('');
@@ -162,14 +115,12 @@ export default function SignIn() {
       }
       // Clean up old reCAPTCHA if exists (prevents duplicate re-render error)
       if (window.recaptchaVerifier) {
-        try {
-          window.recaptchaVerifier.clear();
-        } catch {}
+        try { window.recaptchaVerifier.clear(); } catch {}
         window.recaptchaVerifier = null;
       }
       // Now create a new one
       window.recaptchaVerifier = new RecaptchaVerifier(authInstance, recaptchaContainerRef.current, {
-        'size': 'normal',
+        'size': 'invisible',
         'callback': () => {},
         'expired-callback': () => {
           setMessage("reCAPTCHA expired. Please try again.");
@@ -228,7 +179,7 @@ export default function SignIn() {
         try { window.recaptchaVerifier.clear(); } catch {}
         window.recaptchaVerifier = null;
       }
-      navigate('/'); // Redirect to Home on success
+      navigate('/', { replace: true });
     } catch (error: any) {
       if (error.code === 'auth/invalid-verification-code') {
         setMessage('Invalid OTP. Please try again.');
@@ -257,6 +208,7 @@ export default function SignIn() {
     }
   };
 
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-50 font-inter antialiased">
@@ -273,10 +225,10 @@ export default function SignIn() {
         <p className="text-lg text-gray-600 mb-6">Sign in to unlock exclusive sweet deals.</p>
 
         <h2 className="text-3xl font-extrabold text-gray-800 mb-6">
-          {user && !user.isAnonymous ? "You're Logged In!" : "Sign In / Sign Up"}
+          {user ? "You're Logged In!" : "Sign In / Sign Up"}
         </h2>
 
-        {user && !user.isAnonymous ? (
+        {user ? (
           <div className="space-y-4">
             <p className="text-gray-700 text-lg">
               Logged in as: <span className="font-semibold">{user.displayName || user.email || user.phoneNumber || user.uid}</span>
@@ -301,8 +253,7 @@ export default function SignIn() {
                 <span className="flex items-center"><svg className="animate-spin h-5 w-5 mr-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Signing In...</span>
               ) : (
                 <>
-                  {/* Use your imported GoogleSVG - or paste SVG inline here */}
-                  <GoogleSVG className="w-5 h-5" />
+                  <img src={googleLogoUrl} className="w-5 h-5" alt="Google" />
                   Sign in with Google
                 </>
               )}

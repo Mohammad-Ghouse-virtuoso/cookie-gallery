@@ -36,25 +36,36 @@ declare global {
 export default function Checkout() {
   const { cart, setCart } = useCart();
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get user from AuthContext
+  const { user } = useAuth();
 
   const selectedCookies = cookieList.filter(cookie => cart[cookie.id] > 0);
   const totalAmount = selectedCookies.reduce((sum, cookie) => sum + (cart[cookie.id] * cookie.price), 0);
 
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  // useEffect to ensure user data is loaded before proceeding
   useEffect(() => {
-    if (user) {
-      console.log("Checkout: User data is available.");
+    if (!user) {
+      setShowLoginPrompt(true);
+    } else {
+      setShowLoginPrompt(false);
     }
   }, [user]);
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
   const handlePayment = async () => {
     console.log("handlePayment function started.");
     setMessage(null);
     setIsLoading(true);
+
+    // FIX: Add a check to ensure user is logged in
+    if (!user) {
+      setMessage("You must be logged in to proceed to payment.");
+      setIsLoading(false);
+      return;
+    }
 
     const res = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
     if (!res) {
@@ -65,8 +76,8 @@ export default function Checkout() {
     console.log("Razorpay SDK is ready.");
 
     try {
-      console.log("Attempting to create order on backend: http://localhost:5000/create-order");
-      const orderResponse = await fetch("http://localhost:5000/create-order", {
+      console.log(`Attempting to create order on backend: ${API_BASE}/create-order`);
+      const orderResponse = await fetch(`${API_BASE}/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: totalAmount, currency: "INR" }),
@@ -94,9 +105,9 @@ export default function Checkout() {
           console.log("Razorpay handler function called with response:", response);
           if (response.razorpay_payment_id) {
             setMessage(`Payment process initiated. Please wait for verification...`);
-            console.log("Attempting to verify payment on backend: http://localhost:5000/verify-signature");
+            console.log(`Attempting to verify payment on backend: ${API_BASE}/verify-signature`);
             try {
-              const verificationResponse = await fetch("http://localhost:5000/verify-signature", {
+              const verificationResponse = await fetch(`${API_BASE}/verify-signature`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -118,11 +129,21 @@ export default function Checkout() {
               console.log("Verification result from backend:", verificationResult);
 
               if (verificationResult.success) {
+                // FIX: Pass user.uid to the backend for Firestore storage
+                await fetch(`${API_BASE}/save-order-data`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId: user.uid, // Get UID from AuthContext
+                    orderId: order.id,
+                    items: cart, // Pass the cart data
+                    paymentStatus: 'verified' // A success status
+                  })
+                });
+
                 setMessage(`Payment successful! Payment ID: ${response.razorpay_payment_id}. Order Verified.`);
                 setCart({});
-                setTimeout(() => {
-                  navigate('/order-success');
-                }, 2000);
+                navigate('/order-success');
               } else {
                 setMessage(`Payment verification failed: ${verificationResult.message}. Please contact support.`);
               }
@@ -137,7 +158,6 @@ export default function Checkout() {
           setIsLoading(false);
         },
         prefill: {
-          // <--- UPDATED: Use user's data from AuthContext
           name: user?.displayName || "Cookie Lover",
           email: user?.email || "cookielover@example.com",
           contact: user?.phoneNumber || "9999999999",
@@ -188,6 +208,21 @@ export default function Checkout() {
         background: 'linear-gradient(to bottom right, #f8f9ff, #fafbfc)'
       }}
     >
+      {showLoginPrompt && !user && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-6 z-50">
+          <div className="bg-white p-8 rounded-3xl shadow-xl text-center space-y-4 relative w-full max-w-md">
+            <h3 className="text-3xl font-extrabold text-gray-800">Please Sign In</h3>
+            <p className="text-lg text-gray-600">You need to be signed in to proceed to payment.</p>
+            <button
+              onClick={() => navigate('/signin')}
+              className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-all duration-200"
+            >
+              Go to Sign In
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-lg lg:max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6 relative">
         <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6">Your Order Summary</h1>
         <p className="text-center text-gray-500 mb-8 italic">Ready to treat yourself? Let's get this batch to you!</p>

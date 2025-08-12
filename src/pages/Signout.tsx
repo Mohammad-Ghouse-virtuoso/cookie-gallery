@@ -23,19 +23,13 @@ export default function SignedOut() {
         </span>
       </p>
       
-      {/* Action Buttons */}
+      {/* Action Button */}
       <div className="flex flex-col sm:flex-row gap-4 mt-4">
         <Link
           to="/signin"
           className="bg-stone-200 hover:bg-pink-200 text-white font-bold px-6 py-3 rounded-full shadow-lg text-lg transition-all duration-200"
         >
           Sign In Again
-        </Link>
-        <Link
-          to="/"
-          className="bg-stone-200 hover:bg-orange-200 text-yellow-900 font-bold px-6 py-3 rounded-full shadow-lg text-lg transition-all duration-200"
-        >
-          Browse Cookies
         </Link>
       </div>
 

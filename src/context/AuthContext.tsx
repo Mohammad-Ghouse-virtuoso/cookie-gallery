@@ -1,18 +1,19 @@
+
 // src/context/AuthContext.tsx
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, signInWithCustomToken, signInAnonymously, type User } from 'firebase/auth'; // Import User type
-import { initializeApp } from 'firebase/app'; // Import initializeApp
+import { getAuth, onAuthStateChanged, signInWithCustomToken, getRedirectResult, setPersistence, browserLocalPersistence, type User } from 'firebase/auth'; // Import User type
+import { initializeApp, getApp, getApps } from 'firebase/app'; // Safe Firebase app init
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'; // For saving user profile
 
-// IMPORTANT: Your Firebase config from .env
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'demo-key',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'demo-project.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'demo-project',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'demo-project.appspot.com',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'demo-app-id',
 };
 
 // Global variables provided by Canvas environment (if applicable)
@@ -24,7 +25,6 @@ interface AuthContextType {
   user: User | null; // Firebase User object or null
   loading: boolean; // True while initial auth state is being determined
   signOutUser: () => Promise<void>; // Function to sign out
-  // You might add signIn functions here too if you want to expose them globally
 }
 
 // Create the context
@@ -36,74 +36,94 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true); // True initially while checking auth state
 
   // Initialize Firebase and get auth/firestore instances
-  const app = initializeApp(firebaseConfig);
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const firestore = getFirestore(app);
 
+  // Set persistence once
   useEffect(() => {
-    // Initial sign-in (anonymous or custom token)
-    const setupInitialAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-          console.log("AuthContext: Signed in with custom token.");
-        } else {
-          await signInAnonymously(auth);
-          console.log("AuthContext: Signed in anonymously.");
-        }
-      } catch (error) {
-        console.error("AuthContext: Error during initial auth setup:", error);
-      }
-    };
+    setPersistence(auth, browserLocalPersistence).catch((e) => {
+      console.warn('AuthContext: Failed to set local persistence, falling back to default.', e);
+    });
+  }, [auth]);
 
-    setupInitialAuth();
-
-    // Listen for auth state changes
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false); // Auth state determined
       console.log("AuthContext: Auth state changed. User UID:", currentUser ? currentUser.uid : "null");
 
-      // Save user profile to Firestore if not anonymous
-      if (currentUser && !currentUser.isAnonymous) {
-        saveUserProfileToFirestore(currentUser, firestore);
-      }
+      (async () => {
+        if (currentUser && !currentUser.isAnonymous) {
+          try {
+            await saveUserProfileToFirestore(currentUser, firestore);
+          } catch (e) {
+            console.warn('AuthContext: client Firestore save failed, trying backend /save-user', e);
+            try {
+              await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/save-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  uid: currentUser.uid,
+                  email: currentUser.email,
+                  displayName: currentUser.displayName,
+                  phoneNumber: currentUser.phoneNumber,
+                })
+              });
+              console.log('AuthContext: Saved user via backend /save-user');
+            } catch (be) {
+              console.error('AuthContext: Backend /save-user failed:', be);
+            }
+          }
+        }
+      })();
     });
 
-    return () => unsubscribe(); // Cleanup auth listener on component unmount
-  }, []); // Empty dependency array means this runs once on mount
-
-  // Function to save user profile to Firestore (copied from SignIn.tsx)
-  async function saveUserProfileToFirestore(user: User, firestore: any) {
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const userRef = doc(firestore, "artifacts", appId, "users", user.uid, "profile", "data");
+    // You should check for redirect results inside onAuthStateChanged,
+    // which is the recommended pattern.
+    getRedirectResult(auth).catch((e) => {
+      console.warn('AuthContext: getRedirectResult error', e);
+    });
     
-    try {
-      const docSnap = await getDoc(userRef);
-      if (!docSnap.exists()) {
-        await setDoc(userRef, {
-          uid: user.uid,
-          email: user.email || null,
-          displayName: user.displayName || null,
-          phoneNumber: user.phoneNumber || null,
-          createdAt: new Date(),
-        });
-        console.log("AuthContext: User profile saved to Firestore.");
+    // Perform initial sign-in if no user is present
+    const init = async () => {
+      if (!auth.currentUser) {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        }
       }
+    };
+
+    init();
+
+    return () => unsubscribe(); // Cleanup auth listener on component unmount
+  }, [auth, firestore]);
+
+  async function saveUserProfileToFirestore(user: User, firestore: any) {
+    const userRef = doc(firestore, 'users', user.uid); // doc id = UID
+    try {
+      await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email || null,
+        displayName: user.displayName || null,
+        phoneNumber: user.phoneNumber || null,
+        updatedAt: new Date(),
+      }, { merge: true }); // upsert to also handle "new data"
+      console.log('AuthContext: Upserted user profile doc for', user.uid);
     } catch (error: any) {
       console.error("AuthContext: Error saving user profile to Firestore:", error);
+      throw error; // IMPORTANT: triggers backend /save-user fallback
     }
   }
 
   const signOutUser = async () => {
     try {
-      if (auth.currentUser) { // Only try to sign out if there's a current user
+      if (auth.currentUser) {
         await auth.signOut();
-        console.log("AuthContext: User signed out.");
       }
     } catch (error: any) {
       console.error("AuthContext: Error signing out:", error);
-      throw error; // Re-throw for component to handle
+      throw error;
     }
   };
 
@@ -114,7 +134,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom hook to use the AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

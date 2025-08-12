@@ -1,43 +1,57 @@
 // src/App.tsx
 
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-// Import your components
+
+// Import all of your components
 import NavBar from "./components/NavBar";
 import Home from "./pages/Home";
 import Checkout from "./pages/CheckOut";
-import OrderSuccess from "./pages/OrderSuccess"; // Assuming you have created this page
-import SignIn from "./pages/SignIn"; // Your new SignIn page
-import SignedOut from "./pages/Signout"; // Your new Signout page
+import OrderSuccess from "./pages/OrderSuccess";
+import SignIn from "./pages/SignIn";
+import SignedOut from "./pages/Signout";
+import ProtectedRoutes from "./components/ProtectedRoutes";
 
-// Import the AuthProvider
-import { AuthProvider } from "./context/AuthContext"; // Make sure this path is correct
+// Import AuthProvider
+import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 
+// New component to handle conditional layout
 function AppContent() {
   const location = useLocation();
-  const hideNavbar = location.pathname === '/signed-out' || location.pathname === '/signin';
+  // Check if the current path is the sign-in or signed-out page
+  const hideNav = location.pathname === '/signin' || location.pathname === '/signed-out';
 
   return (
     <>
-      {!hideNavbar && <NavBar />}
+      {/* Conditionally render the NavBar based on the current URL */}
+      {!hideNav && <NavBar />}
+
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-success" element={<OrderSuccess />} />
+        {/* Unprotected routes (don't have a NavBar) */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signed-out" element={<SignedOut />} />
-        {/* Add more routes as your app grows */}
+        <Route path="/order-success" element={<OrderSuccess />} />
+
+        {/* Protected routes (these will have the NavBar rendered) */}
+        <Route path="/" element={<ProtectedRoutes />}>
+          {/* Explicit home route to support navigate('/home') after sign-in */}
+          <Route index element={<Home />} />
+          <Route path="home" element={<Home />} />
+          <Route path="checkout" element={<Checkout />} />
+        </Route>
       </Routes>
     </>
   );
 }
 
+// The main App component that wraps everything with providers
 function App() {
   return (
-    // BrowserRouter is needed for routing
     <BrowserRouter>
-      {/* AuthProvider wraps your entire application to provide auth context */}
       <AuthProvider>
-        <AppContent />
+        <CartProvider>
+          <AppContent />
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );

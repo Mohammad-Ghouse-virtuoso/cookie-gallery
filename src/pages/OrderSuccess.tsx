@@ -1,6 +1,5 @@
 // src/pages/OrderSuccess.tsx
 
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function OrderSuccess() {
@@ -27,7 +26,7 @@ export default function OrderSuccess() {
       <div className="flex flex-col sm:flex-row gap-4">
         <Link
           to="/"
-          className="px-6 py-3 bg-teal-600 text-white rounded-full font-bold shadow-lg hover:bg-teal-700 transition-transform hover:scale-105"
+          className="px-6 py-3 bg-silver-300 text-white rounded-full font-bold shadow-lg hover:bg-stone-200 transition-transform hover:scale-105"
         >
           Continue Shopping
         </Link>
