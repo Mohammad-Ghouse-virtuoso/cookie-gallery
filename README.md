@@ -60,3 +60,5 @@ Start both the frontend and backend servers with a single command from the root 
 
 
 Note: Procuring credentials from Razorpay is mandatory to run. 
+
+Signin with number +91 8080569613 OTP: 158363
