@@ -4,16 +4,16 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, signInWithCustomToken, getRedirectResult, setPersistence, browserLocalPersistence, type User } from 'firebase/auth'; // Import User type
 import { initializeApp, getApp, getApps } from 'firebase/app'; // Safe Firebase app init
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'; // For saving user profile
+import { getFirestore, doc, setDoc } from 'firebase/firestore'; // For saving user profile
 
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'demo-key',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'demo-project.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'demo-project',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'demo-project.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'demo-app-id',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Global variables provided by Canvas environment (if applicable)
@@ -24,21 +24,69 @@ declare const __initial_auth_token: string | undefined;
 interface AuthContextType {
   user: User | null; // Firebase User object or null
   loading: boolean; // True while initial auth state is being determined
+  bootChecked: boolean; // True after /health boot id is checked
   signOutUser: () => Promise<void>; // Function to sign out
 }
 
 // Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Detect backend restarts to refresh auth once
+async function getServerBootId(): Promise<string | null> {
+  try {
+    const res = await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/health', { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.boot_id || null;
+  } catch { return null; }
+}
+
+
 // Auth Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // True initially while checking auth state
+  const [loading, setLoading] = useState(true); // True while auth state resolving
+  const [bootChecked, setBootChecked] = useState(false); // Becomes true after /health processed
+  const [reloadChecked, setReloadChecked] = useState(false); // ensures we process refresh policy exactly once
+
 
   // Initialize Firebase and get auth/firestore instances
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const firestore = getFirestore(app);
+
+  // Detect backend restart and refresh auth once after reload
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const bootId = await getServerBootId();
+      const stored = sessionStorage.getItem('server_boot_id');
+      if (mounted) {
+        if (!stored && bootId) {
+          sessionStorage.setItem('server_boot_id', bootId);
+        } else if (stored && bootId && stored !== bootId) {
+          try { await auth.signOut().catch(() => {}); }
+          finally { sessionStorage.setItem('server_boot_id', bootId); }
+        }
+        setBootChecked(true);
+      }
+  // Enforce sign-out-on-refresh policy (to reset user like cart resets) once per browser load
+  useEffect(() => {
+    if (reloadChecked) return;
+    const already = sessionStorage.getItem('cg_reload_done');
+    const doReset = !already; // first load after refresh
+    (async () => {
+      if (doReset && auth.currentUser) {
+        try { await auth.signOut().catch(() => {}); } catch {}
+      }
+      sessionStorage.setItem('cg_reload_done', '1');
+      setReloadChecked(true);
+    })();
+  }, [auth, reloadChecked]);
+
+    })();
+    return () => { mounted = false };
+  }, [auth]);
 
   // Set persistence once
   useEffect(() => {
@@ -60,12 +108,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           } catch (e) {
             console.warn('AuthContext: client Firestore save failed, trying backend /save-user', e);
             try {
-              await fetch((import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000') + '/save-user', {
+              const token = await currentUser.getIdToken();
+              await fetch(import.meta.env.VITE_API_BASE_URL + '/save-user', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
-                  uid: currentUser.uid,
-                  email: currentUser.email,
                   displayName: currentUser.displayName,
                   phoneNumber: currentUser.phoneNumber,
                 })
@@ -84,7 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     getRedirectResult(auth).catch((e) => {
       console.warn('AuthContext: getRedirectResult error', e);
     });
-    
+
     // Perform initial sign-in if no user is present
     const init = async () => {
       if (!auth.currentUser) {
@@ -128,7 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOutUser }}>
+    <AuthContext.Provider value={{ user, loading, bootChecked, signOutUser }}>
       {children}
     </AuthContext.Provider>
   );

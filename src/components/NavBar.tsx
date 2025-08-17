@@ -21,7 +21,7 @@ export default function NavBar() {
     <nav className="bg-white shadow-md py-4 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-50 font-inter antialiased">
       {/* Logo and Site Title */}
       <div className="flex items-center space-x-2">
-        <FaCookieBite className="text-teal-600 text-3xl" />
+        <FaCookieBite className="text-indigo-400 text-3xl" />
         <Link to="/" className="text-2xl font-extrabold text-gray-800 hover:text-teal-700 transition-colors">
           Cookie Gallery 🍪
         </Link>
@@ -51,6 +51,21 @@ export default function NavBar() {
             >
               Checkout
             </Link>
+
+            {/* Signed-in identity avatar (hover to reveal email) */}
+            <div className="relative group select-none">
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="avatar" className="w-9 h-9 rounded-full object-cover shadow-sm ring-2 ring-white" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-teal-600 text-white font-semibold flex items-center justify-center shadow-sm">
+                  {(user?.email || 'C').slice(0,1).toUpperCase()}
+                </div>
+              )}
+              <div className="absolute -left-2 top-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none bg-white text-gray-700 text-xs px-3 py-2 rounded-lg shadow-md whitespace-nowrap border border-gray-200">
+                {user?.email || 'Signed in'}
+              </div>
+            </div>
+
 
             {/* Sign Out Button when logged in */}
             <button

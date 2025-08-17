@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FaArrowRight } from 'react-icons/fa';
-import heroImage from '../assets/Hero-cookie-platter.jpg'; // IMPORTANT: Ensure this path is correct and image exists
+import heroImage from '../assets/Cookie-Hero Card.png'; // IMPORTANT: Ensure this path is correct and image exists
 
 export default function Hero() {
   return (
-    <section className="w-full bg-gradient-to-b from-blue-50 via-gray-50 to-white pt-16 pb-20 font-inter antialiased">
+    <section className="relative w-full bg-gradient-to-b from-blue-50 via-gray-50 to-white pt-16 pb-20 font-inter antialiased">
       <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
         {/* Text Content */}
         <motion.div
@@ -48,7 +48,7 @@ export default function Hero() {
             className={`
               w-full max-w-md md:max-w-full rounded-2xl object-cover
               transform origin-center
-              shadow-2xl rotate-3 transition-transform duration-500 ease-in-out hover:rotate-0 hover:scale-105
+              shadow-[0_20px_60px_rgba(0,0,0,0.25)] ring-1 ring-white/40 rotate-3 transition-transform duration-500 ease-in-out hover:rotate-0 hover:scale-105
             `}
           />
         </motion.div>
@@ -56,7 +56,7 @@ export default function Hero() {
 
       {/* Subtle background shapes for visual appeal */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute w-64 h-64 bg-teal-200 rounded-full opacity-20 -top-10 -left-10 blur-2xl"></div>
+        <div className="absolute w-64 h-64 bg-indigo-200 rounded-full opacity-20 -top-10 -left-10 blur-2xl"></div>
         <div className="absolute bottom-20 right-20 w-32 h-32 bg-blue-200 rounded-full opacity-15 bottom-0 -right-20 blur-2xl"></div>
       </div>
     </section>

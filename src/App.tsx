@@ -10,6 +10,9 @@ import OrderSuccess from "./pages/OrderSuccess";
 import SignIn from "./pages/SignIn";
 import SignedOut from "./pages/Signout";
 import ProtectedRoutes from "./components/ProtectedRoutes";
+import Story from "./pages/Story";
+import BehindTheScenes from "./pages/BehindTheScenes";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 // Import AuthProvider
 import { AuthProvider } from "./context/AuthContext";
@@ -38,6 +41,9 @@ function AppContent() {
           <Route index element={<Home />} />
           <Route path="home" element={<Home />} />
           <Route path="checkout" element={<Checkout />} />
+          <Route path="story" element={<Story />} />
+          <Route path="behind-the-scenes" element={<BehindTheScenes />} />
+          <Route path="privacy" element={<PrivacyPolicy />} />
         </Route>
       </Routes>
     </>

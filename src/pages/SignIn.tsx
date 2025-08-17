@@ -62,6 +62,10 @@ export default function SignIn() {
     })();
   }, [authInstance, navigate]);
 
+  // Removed auto-trigger for Google sign-in to allow manual user interaction
+  // Users must click the button to initiate sign-in
+
+
 
   // IMPORTANT: The redirect logic is handled by ProtectedRoutes, so SignIn doesn't need its own redirect.
   // The user is already redirected to /home by the ProtectedRoutes component after successful sign-in.

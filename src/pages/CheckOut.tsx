@@ -1,6 +1,6 @@
 // src/pages/Checkout.tsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { cookies as cookieList } from "../data/cookies";
@@ -14,6 +14,7 @@ function loadScript(src: string): Promise<boolean> {
   return new Promise((resolve) => {
     const script = document.createElement("script");
     script.src = src;
+    script.async = true;
     script.onload = () => {
       console.log("Script loaded successfully:", src);
       resolve(true);
@@ -24,6 +25,36 @@ function loadScript(src: string): Promise<boolean> {
     };
     document.body.appendChild(script);
   });
+}
+
+// Hard reset any Razorpay client-side cache and SDK instance
+function resetRazorpayCaches() {
+  try {
+    // Remove any local/session storage entries Razorpay might have left behind
+    const purge = (storage: Storage) => {
+      const keys: string[] = [];
+      for (let i = 0; i < storage.length; i++) {
+        const k = storage.key(i);
+        if (!k) continue;
+        const keyLower = k.toLowerCase();
+        if (keyLower.includes('razorpay') || keyLower.includes('rzp') || keyLower.includes('checkout')) {
+          keys.push(k);
+        }
+      }
+      keys.forEach(k => storage.removeItem(k));
+    };
+    purge(window.localStorage);
+    purge(window.sessionStorage);
+
+    // Remove any previously injected checkout.js script
+    document.querySelectorAll('script[src*="checkout.razorpay.com/"]').forEach((n) => n.parentElement?.removeChild(n));
+
+    // Drop global constructor so a fresh one is created when we reload the script
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).Razorpay;
+  } catch (e) {
+    console.warn('resetRazorpayCaches: non-fatal', e);
+  }
 }
 
 // Extend Window interface to include Razorpay for TypeScript
@@ -53,7 +84,18 @@ export default function Checkout() {
     }
   }, [user]);
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
+  async function getIdToken(): Promise<string | null> {
+    try {
+      const { getAuth } = await import('firebase/auth');
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) return null;
+      return await user.getIdToken();
+    } catch {
+      return null;
+    }
+  }
 
   const handlePayment = async () => {
     console.log("handlePayment function started.");
@@ -67,7 +109,10 @@ export default function Checkout() {
       return;
     }
 
-    const res = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+    // Ensure no stale SDK or cached user prefill persists across sessions
+    resetRazorpayCaches();
+    const sdkUrl = `https://checkout.razorpay.com/v1/checkout.js?cb=${Date.now()}`; // cache-bust
+    const res = await loadScript(sdkUrl);
     if (!res) {
       setMessage("Razorpay SDK failed to load. Please check your internet connection.");
       setIsLoading(false);
@@ -77,9 +122,13 @@ export default function Checkout() {
 
     try {
       console.log(`Attempting to create order on backend: ${API_BASE}/create-order`);
+      const token = await getIdToken();
       const orderResponse = await fetch(`${API_BASE}/create-order`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ amount: totalAmount, currency: "INR" }),
       });
 
@@ -93,7 +142,7 @@ export default function Checkout() {
 
       const order = await orderResponse.json();
       console.log("Order created successfully by backend:", order);
-      
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -130,14 +179,19 @@ export default function Checkout() {
 
               if (verificationResult.success) {
                 // FIX: Pass user.uid to the backend for Firestore storage
+                const token2 = await getIdToken();
                 await fetch(`${API_BASE}/save-order-data`, {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(token2 ? { Authorization: `Bearer ${token2}` } : {}),
+                  },
                   body: JSON.stringify({
-                    userId: user.uid, // Get UID from AuthContext
                     orderId: order.id,
-                    items: cart, // Pass the cart data
-                    paymentStatus: 'verified' // A success status
+                    items: cart,
+                    paymentStatus: 'verified',
+                    paymentAmount: order.amount / 100,
+                    paymentCurrency: order.currency
                   })
                 });
 
@@ -157,17 +211,33 @@ export default function Checkout() {
           }
           setIsLoading(false);
         },
+        // Explicitly avoid Razorpay remembering previous user by disabling remember_customer
+        remember_customer: false,
         prefill: {
-          name: user?.displayName || "Cookie Lover",
-          email: user?.email || "cookielover@example.com",
-          contact: user?.phoneNumber || "9999999999",
+          name: user?.displayName || (user?.email ? user.email.split('@')[0] : '') || '',
+          email: user?.email ? String(user.email) : '',
+          contact: user?.phoneNumber ? String(user.phoneNumber) : '',
+        } as any,
+        modal: {
+          ondismiss: () => {
+            // On dismiss, drop any possible persisted state so next attempt uses current user
+            resetRazorpayCaches();
+          }
         },
         theme: {
           color: "#10B981",
         },
       };
 
-      const paymentObject = new window.Razorpay(options);
+      // Ensure a fresh instance is created every time
+      resetRazorpayCaches();
+      const RazorpayCtor = (window as any).Razorpay;
+      if (!RazorpayCtor) {
+        setMessage('Razorpay SDK not available after load. Please retry.');
+        setIsLoading(false);
+        return;
+      }
+      const paymentObject = new RazorpayCtor(options);
       paymentObject.on('modal.close', () => {
         setMessage('Payment window closed without completing payment.');
         setIsLoading(false);
@@ -226,7 +296,7 @@ export default function Checkout() {
       <div className="w-full max-w-lg lg:max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6 relative">
         <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6">Your Order Summary</h1>
         <p className="text-center text-gray-500 mb-8 italic">Ready to treat yourself? Let's get this batch to you!</p>
-        
+
         <div className="space-y-4">
           {selectedCookies.map(cookie => (
             <div
@@ -255,7 +325,7 @@ export default function Checkout() {
             {message}
           </div>
         )}
-        
+
         <button
           onClick={handlePayment}
           disabled={isLoading}

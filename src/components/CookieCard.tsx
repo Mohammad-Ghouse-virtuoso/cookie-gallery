@@ -16,12 +16,12 @@ const CookieCard: React.FC<CookieCardProps> = ({ cookie, quantity, onChange, onS
   const isMaxQuantity = quantity >= maxQuantity;
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-4 flex flex-col items-center text-center transition-all duration-300 hover:shadow-xl hover:scale-105 border border-gray-100">
+    <div className="group bg-white rounded-2xl shadow-xl md:shadow-2xl p-5 flex flex-col items-center text-center transition-all duration-300 hover:scale-105 border border-gray-100 ring-1 ring-gray-50 hover:ring-rose-200/70 hover:shadow-[0_16px_40px_rgba(0,0,0,0.25)]">
       {/* Cookie Image */}
       <img
         src={cookie.src} // Uses the src from the cookie data
         alt={cookie.name}
-        className="w-40 h-40 sm:w-48 sm:h-48 object-cover rounded-xl mb-4 shadow-md bg-gray-50 p-2"
+        className="w-40 h-40 sm:w-48 sm:h-48 object-cover rounded-xl mb-4 shadow-lg bg-gray-50 p-2 transition-transform duration-300 group-hover:scale-105 group-hover:shadow-xl"
         onError={(e) => { (e.target as HTMLImageElement).onerror = null; (e.target as HTMLImageElement).src = 'https://placehold.co/192x192/E0E0E0/616161?text=No+Image'; }} // Fallback
       />
 

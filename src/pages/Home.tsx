@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { cookies as cookieList, type CookieData } from '../data/cookies'; // Importing from your data file
 import { useCart } from '../context/CartContext';
-import { FaInstagram, FaTwitter, FaFacebook } from 'react-icons/fa'; // Ensure react-icons is installed
+import { FaInstagram, FaFacebook } from 'react-icons/fa'; // Ensure react-icons is installed
+import { FaXTwitter } from 'react-icons/fa6';
+import { FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 import { Link, useLocation, useNavigate } from 'react-router-dom'; // <--- ADDED: useLocation, useNavigate
 import { useAuth } from '../context/AuthContext'; // Use AuthContext
 
@@ -9,6 +11,7 @@ import { useAuth } from '../context/AuthContext'; // Use AuthContext
 import Hero from '../components/Hero';
 import CookieCard from '../components/CookieCard';
 import CookieDetailsModal from '../components/CookieDetailModal';
+import ReviewsSection from '../components/ReviewsSection';
 
 
 export default function Home() {
@@ -76,9 +79,11 @@ export default function Home() {
           </div>
         </div>
       )}
-      
       {/* Hero component */}
       <Hero />
+
+      {/* Reviews placed under hero and before cookie collections */}
+      <ReviewsSection />
 
       {/* Main content for cookie gallery */}
       <main id="cookie-gallery-section" className="py-16 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden">
@@ -102,66 +107,73 @@ export default function Home() {
           </div>
         </div>
       </main>
-      
+
       {/* Cookie Details Modal */}
       <CookieDetailsModal
         cookie={selectedCookie}
         onClose={() => setSelectedCookie(null)}
       />
-      
+
       {/* FOOTER SECTION - START */}
-      <footer className="w-full bg-gray-800 text-gray-300 py-12 px-4 sm:px-6 lg:px-8 font-inter antialiased">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 text-center md:text-left">
-          {/* Section 1: Brand Info */}
+      <footer className="relative w-full bg-gradient-to-b from-slate-900 to-zinc-950 text-slate-300 pt-16 pb-10 px-4 sm:px-6 lg:px-8 font-inter antialiased">
+        <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
+          {/* Brand & Contact */}
           <div>
-            <h3 className="font-bold text-2xl text-white mb-4">Cookie Gallery</h3>
-            <p className="text-sm leading-relaxed">
-              Indulge in handcrafted delights. We bake with passion, using only the finest ingredients to bring you a taste of pure joy.
+            <h3 className="text-2xl font-extrabold text-white tracking-tight">Cookie Gallery</h3>
+            <p className="mt-3 text-sm text-slate-300/90 leading-relaxed">
+              Handcrafted delights baked with love and the finest ingredients.
             </p>
-            <p className="text-xs mt-4 opacity-75">FSSAI Lic No. 12345678901234</p>
-            <p className="text-xs opacity-75">© {new Date().getFullYear()} Cookie Gallery. All Rights Reserved.</p>
-            <p className="text-sm mt-3">Made with <span className="text-red-400">♥</span> in Hyderabad.</p>
+            <ul className="mt-4 space-y-2 text-sm">
+              <li className="flex items-center gap-3"><FiMapPin className="text-rose-300" /> Hyderabad, IN</li>
+              <li className="flex items-center gap-3"><FiPhone className="text-rose-300" /> +91-00000-00000</li>
+              <li className="flex items-center gap-3"><FiMail className="text-rose-300" /> hello@cookie.gallery</li>
+            </ul>
+            <p className="mt-4 text-xs opacity-70">FSSAI Lic No. 12345678901234</p>
+            <p className="text-xs opacity-70">© {new Date().getFullYear()} Cookie Gallery. All Rights Reserved.</p>
           </div>
 
-          {/* Section 2: Quick Links */}
+          {/* Quick Links */}
           <div>
-            <h3 className="font-bold text-2xl text-white mb-4">Quick Links</h3>
-            <ul className="space-y-2">
-              <li><Link to="/" className="hover:text-teal-400 transition-colors">Home</Link></li>
-              <li><Link to="/checkout" className="hover:text-teal-400 transition-colors">Checkout</Link></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-teal-400 transition-colors">Privacy Policy</a></li>
+            <h3 className="text-sm font-semibold tracking-widest text-slate-400 uppercase">Quick Links</h3>
+            <ul className="mt-4 space-y-2 text-base">
+              <li><Link to="/" className="hover:text-rose-300 transition-colors">Home</Link></li>
+              <li><Link to="/checkout" className="hover:text-rose-300 transition-colors">Checkout</Link></li>
+              <li><Link to="/story" className="hover:text-rose-300 transition-colors">Story</Link></li>
+              <li><Link to="/behind-the-scenes" className="hover:text-rose-300 transition-colors">Behind the Scenes</Link></li>
             </ul>
           </div>
 
-          {/* Section 3: Stay Connected & Socials */}
-          <div className="flex flex-col items-center md:items-end">
-            <h3 className="font-bold text-2xl text-white mb-4">Stay Connected</h3>
-            <form className="flex w-full max-w-sm rounded-lg overflow-hidden border border-gray-600 mb-6 shadow-md">
+          {/* Newsletter & Social */}
+          <div className="md:justify-self-end">
+            <h3 className="text-sm font-semibold tracking-widest text-slate-400 uppercase">Stay in the loop</h3>
+            <form className="mt-4 flex w-full max-w-sm rounded-xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm">
               <input
                 type="email"
                 placeholder="Your email for sweet deals"
-                className="w-full px-4 py-2 bg-gray-700 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-400 flex-grow"
+                className="w-full px-4 py-3 bg-transparent text-slate-200 placeholder-slate-400 focus:outline-none"
               />
               <button
                 type="submit"
-                className="bg-teal-600 text-white px-4 py-2 font-semibold hover:bg-teal-700 transition-colors"
+                className="px-4 py-3 font-semibold bg-rose-500/90 hover:bg-rose-500 text-white transition-colors"
               >
                 Subscribe
               </button>
             </form>
-            <div className="flex items-center gap-5">
-              <a href="#" aria-label="Instagram" className="text-teal-600 hover:text-teal-800 transition-colors text-3xl"><FaInstagram /></a>
-              <a href="#" aria-label="Twitter" className="text-teal-600 hover:text-teal-800 transition-colors text-3xl"><FaTwitter /></a>
-              <a href="#" aria-label="Facebook" className="text-teal-600 hover:text-teal-800 transition-colors text-3xl"><FaFacebook /></a>
+            <div className="mt-6 flex items-center gap-4">
+              <a href="#" aria-label="Instagram" className="p-2 rounded-full bg-white/5 hover:bg-white/10 ring-1 ring-white/10 transition-all text-pink-500 text-2xl"><FaInstagram /></a>
+              <a href="#" aria-label="X" className="p-2 rounded-full bg-white/5 hover:bg-white/10 ring-1 ring-white/10 transition-all text-black text-2xl"><FaXTwitter /></a>
+              <a href="#" aria-label="Facebook" className="p-2 rounded-full bg-white/5 hover:bg-white/10 ring-1 ring-white/10 transition-all text-blue-500 text-2xl"><FaFacebook /></a>
             </div>
           </div>
         </div>
-        <div className="text-center mt-10 border-t border-gray-700 pt-6">
-          <p className="text-sm opacity-60">
-            "Life is what you bake it!"
-          </p>
+
+        {/* Bottom bar */}
+        <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-3 text-sm">
+          <p className="opacity-70">"Life is what you bake it!"</p>
+          <div className="text-xs">
+            <Link to="/privacy" className="underline underline-offset-2 hover:text-rose-300 transition-colors">Privacy Policy</Link>
+          </div>
         </div>
       </footer>
       {/* FOOTER SECTION - END */}
