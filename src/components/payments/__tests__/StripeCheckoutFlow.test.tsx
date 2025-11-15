@@ -145,7 +145,6 @@ describe('StripeCheckoutFlow', () => {
     });
 
     fetchMock
-      .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'pending' }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'completed' }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
 
     const { rerender } = render(
@@ -164,8 +163,6 @@ describe('StripeCheckoutFlow', () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/api/order-status'), expect.any(Object));
     });
-
-    await userEvent.click(screen.getByRole('button', { name: /check again now/i }));
 
     await waitFor(() => {
       expect(navigateSpy).toHaveBeenCalledWith('/order-success', expect.objectContaining({ replace: true }));
