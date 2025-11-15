@@ -168,7 +168,7 @@ describe('StripeCheckoutFlow', () => {
     await userEvent.click(screen.getByRole('button', { name: /check again now/i }));
 
     await waitFor(() => {
-      expect(navigateSpy).toHaveBeenCalledWith('/order-success');
+      expect(navigateSpy).toHaveBeenCalledWith('/order-success', expect.objectContaining({ replace: true }));
     }, { timeout: 2000 });
 
     rerender(<div />);
