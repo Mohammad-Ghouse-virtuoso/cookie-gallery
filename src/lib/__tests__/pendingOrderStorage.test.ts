@@ -14,6 +14,7 @@ describe('pendingOrderStorage', () => {
     providerSessionId: 'sess_123',
     createdAt: Date.now(),
     cart: { 'choco-cookie': 2 },
+    returnPath: '/checkout',
     status: 'pending',
   };
 
