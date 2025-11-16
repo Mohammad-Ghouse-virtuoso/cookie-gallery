@@ -51,9 +51,17 @@ Thumbs.db
 *.sln
 *.swp
 
+# Playwright test artifacts
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # Documentation files (local notes)
 *.md
 !README.md
+!E2E_*.md
+!*_GUIDE*.md
+!CONTRIBUTING.md
 
 # Video files
 *.mp4
