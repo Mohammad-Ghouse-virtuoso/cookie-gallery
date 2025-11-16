@@ -54,6 +54,19 @@ Thumbs.db
 # Documentation files (local notes)
 *.md
 !README.md
+!TESTING_GUIDE_COMPLETE.md
+!CONTRIBUTING.md
+!*_GUIDE.md
+!*_STEPS.md
+!*_SUMMARY.md
+!*_REPORT.md
+!*_RESULTS.md
+
+# Playwright / E2E test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+*.trace.zip
 
 # Video files
 *.mp4
