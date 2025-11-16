@@ -52,10 +52,25 @@ Thumbs.db
 *.swp
 
 # Documentation files (local notes)
+# Note: Allow all markdown files in tests directory
 *.md
 !README.md
+!tests/**/*.md
+!TESTING_GUIDE_COMPLETE.md
+!TESTING_TYPES_REPORT.md
+!TEST_RESULTS.md
+!CONTRIBUTING.md
+!QUICK_REFERENCE.md
+!IMPLEMENTATION_SUMMARY.md
+!LINT_REPORT.md
+!SECURITY_OPS_IMPLEMENTATION.md
 
 # Video files
 *.mp4
 *.mov
 *.avi
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
