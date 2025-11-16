@@ -20,6 +20,15 @@ const config: UserConfig & { test: VitestUserConfig['test'] } = {
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     mockReset: true,
+    exclude: [
+      'node_modules',
+      'dist',
+      'src/backend/**/*', // Exclude backend tests - they use Jest
+      '.idea',
+      '.git',
+      '.cache',
+      'tests/e2e/**/*', // Exclude E2E tests - they use Playwright
+    ],
   },
   build: {
     rollupOptions: {
