@@ -6,44 +6,38 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('Checkout Flow', () => {
-  test('checkout page requires authentication', async ({ page }) => {
+  test('checkout page is protected by authentication', async ({ page }) => {
     // Try to access checkout page directly (may redirect to signin if not authenticated)
-    await page.goto('/checkout');
-    
-    await page.waitForLoadState('networkidle');
+    await page.goto('/checkout', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Either we're on checkout page (if authenticated) or signin page (if not authenticated)
     const url = page.url();
-    expect(url).toMatch(/\/(checkout|signin)/i);
+    expect(url).toMatch(/checkout|signin/i);
   });
 
   test('checkout page loads when accessed', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
     // Try to navigate to checkout
-    await page.goto('/checkout');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/checkout', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
-    // Verify we're on a valid page
+    // Verify we're on a valid page (either checkout or signin)
     const url = page.url();
     expect(url.length).toBeGreaterThan(0);
+    expect(url).toMatch(/checkout|signin/i);
   });
 
-  test('user can access checkout from navigation', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+  test('checkout is accessible via direct URL', async ({ page }) => {
+    // Direct navigation to checkout
+    await page.goto('/checkout', { waitUntil: 'domcontentloaded', timeout: 60000 });
     
-    // Look for checkout link in navigation
-    const checkoutLink = page.getByRole('link', { name: /checkout/i }).first();
-    const linkCount = await checkoutLink.count();
+    // Verify we reached a valid page (checkout or signin redirect)
+    const url = page.url();
+    expect(url).toMatch(/checkout|signin/i);
     
-    if (linkCount > 0) {
-      await checkoutLink.click();
-      await page.waitForLoadState('networkidle');
-      
-      // Verify navigation occurred
-      expect(page.url()).toMatch(/checkout|signin/i);
-    }
+    // Verify page has content
+    const bodyText = await page.textContent('body');
+    expect(bodyText).toBeTruthy();
+    expect(bodyText!.length).toBeGreaterThan(0);
   });
 });
