@@ -175,6 +175,64 @@ Suggested QA when toggling the flag:
 └── README.md
 
 
+## 🧪 Testing
+
+### Unit & Integration Tests
+
+The project includes comprehensive test coverage:
+
+```bash
+# Run unit tests (Vitest)
+npm run test
+
+# Run unit tests in watch mode
+npm run test -- --watch
+
+# Run backend tests (Jest)
+cd src/backend && npm test
+```
+
+### End-to-End Tests
+
+E2E tests are implemented using Playwright to test complete user journeys:
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run E2E tests with visible browser
+npm run test:e2e:headed
+
+# Run E2E tests in debug mode
+npm run test:e2e:debug
+
+# Run E2E tests with interactive UI
+npm run test:e2e:ui
+
+# View test report
+npm run test:e2e:report
+```
+
+#### Test Coverage
+
+- **26 E2E tests** covering:
+  - Authentication flows (signin, signout, protected routes)
+  - Shopping experience (browse, catalogue, navigation)
+  - Checkout process (page loading, authentication requirements)
+  - Responsive design (desktop, tablet, mobile viewports)
+  - Navigation (all major routes, 404 handling)
+
+#### CI/CD Integration
+
+E2E tests run automatically on:
+- Push to main branches
+- Pull requests
+- Multi-browser testing (Chromium, Firefox, WebKit)
+
+Test results, screenshots, and videos are uploaded as artifacts for debugging failures.
+
+For more details, see [tests/e2e/README.md](tests/e2e/README.md)
+
 ## 🔒 Security Features
 
 - **Firebase Authentication**: Industry-standard auth with OAuth2
