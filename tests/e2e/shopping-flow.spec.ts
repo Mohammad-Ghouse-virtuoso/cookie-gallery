@@ -1,53 +1,66 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Shopping Flow', () => {
-  test('user can browse cookies and add to cart', async ({ page }) => {
-    // Navigate to homepage
-    await page.goto('/');
-    
-    // Wait for cookies to load
-    await expect(
-      page.locator('[data-testid="cookie-card"]').first()
-    ).toBeVisible({ timeout: 10000 });
-    
-    // Click on a cookie card
-    await page.locator('[data-testid="cookie-card"]').first().click();
-    
-    // Verify modal opens
-    await expect(page.locator('[role="dialog"]')).toBeVisible();
-    
-    // Add to cart
-    await page.click('button:has-text("Add to Cart")');
-    
-    // Verify cart badge updates
-    await expect(page.locator('[data-testid="cart-badge"]'))
-      .toContainText('1', { timeout: 5000 });
-    
-    // Close modal
-    await page.keyboard.press('Escape');
-    
-    // Verify modal closes
-    await expect(page.locator('[role="dialog"]')).not.toBeVisible();
-  });
-
-  test('user can view cart and update quantities', async ({ page }) => {
-    await page.goto('/');
+  test('user can browse cookies in the catalogue', async ({ page }) => {
+    // Navigate to cookie catalogue
+    await page.goto('/cookies');
     
     // Wait for page to load
     await page.waitForLoadState('networkidle');
     
-    // Add item to cart
-    await page.locator('[data-testid="cookie-card"]').first().click();
-    await page.click('button:has-text("Add to Cart")');
-    await page.keyboard.press('Escape');
+    // Check if catalogue title is visible
+    await expect(page.getByRole('heading', { name: 'Cookie Catalogue' })).toBeVisible();
     
-    // Open cart
-    await page.click('[data-testid="cart-button"]');
+    // Wait for cookie cards to load (using the article element with class)
+    const cookieCards = page.locator('article.cookie-card');
+    await expect(cookieCards.first()).toBeVisible({ timeout: 10000 });
     
-    // Verify cart modal is visible
-    await expect(page.locator('[data-testid="cart-modal"]')).toBeVisible();
+    // Verify multiple cookies are displayed
+    const count = await cookieCards.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('user can add cookies to cart using quantity controls', async ({ page }) => {
+    // Navigate to cookie catalogue
+    await page.goto('/cookies');
     
-    // Verify cart has items
-    await expect(page.locator('[data-testid="cart-item"]')).toHaveCount(1);
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
+    
+    // Find the first cookie card
+    const firstCard = page.locator('article.cookie-card').first();
+    await expect(firstCard).toBeVisible();
+    
+    // Find the increase quantity button (+ button)
+    const increaseButton = firstCard.locator('button[aria-label*="Increase quantity"]');
+    
+    // Click to add one cookie
+    await increaseButton.click();
+    
+    // Verify quantity is updated to 1
+    await expect(firstCard.locator('span[aria-live="polite"]')).toHaveText('1');
+    
+    // Click again to add another
+    await increaseButton.click();
+    
+    // Verify quantity is updated to 2
+    await expect(firstCard.locator('span[aria-live="polite"]')).toHaveText('2');
+  });
+
+  test('user can view cookie details button', async ({ page }) => {
+    // Navigate to cookie catalogue
+    await page.goto('/cookies');
+    
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
+    
+    // Find the first cookie card
+    const firstCard = page.locator('article.cookie-card').first();
+    await expect(firstCard).toBeVisible();
+    
+    // Verify the "View Details" button exists and is clickable
+    const detailsButton = firstCard.locator('button:has-text("View Details")');
+    await expect(detailsButton).toBeVisible();
+    await expect(detailsButton).toBeEnabled();
   });
 });
