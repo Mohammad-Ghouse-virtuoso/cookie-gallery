@@ -52,10 +52,14 @@ Thumbs.db
 *.swp
 
 # Documentation files (local notes)
-*.md
-!README.md
+# Note: Allow markdown files by default, only exclude specific ones if needed
 
 # Video files
 *.mp4
 *.mov
 *.avi
+
+# Playwright test results
+test-results/
+playwright-report/
+playwright/.cache/
