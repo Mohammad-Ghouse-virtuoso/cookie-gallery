@@ -55,10 +55,12 @@ Thumbs.db
 *.md
 !README.md
 !E2E_TESTING_GUIDE.md
+!E2E_TEST_SUMMARY.md
 !TESTING_TYPES_REPORT.md
 !TEST_RESULTS.md
 !CONTRIBUTING.md
 !*GUIDE*.md
+!*SUMMARY*.md
 
 # Video files
 *.mp4
