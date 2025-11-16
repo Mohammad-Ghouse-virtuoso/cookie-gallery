@@ -66,11 +66,12 @@ test.describe('Basic Navigation', () => {
     
     // Should show 404 or redirect to signin
     const url = page.url();
-    const isNotFoundPage = url.includes('not-found') || 
-                          url.includes('404') ||
-                          await page.locator('text=/404|not found/i').count() > 0;
+    
+    // Check if we got a 404 page or were redirected
+    const notFoundElements = await page.locator('text=/404|not found/i').count();
     
     // Verify we got some response (either 404 page or signin redirect)
+    console.log('404 test - URL:', url, 'Has 404 elements:', notFoundElements > 0);
     expect(url.length).toBeGreaterThan(0);
   });
 });
