@@ -51,11 +51,16 @@ Thumbs.db
 *.sln
 *.swp
 
-# Documentation files (local notes)
-*.md
-!README.md
+# Documentation files (local notes) - COMMENTED OUT TO ALLOW DOCS
+# *.md
+# !README.md
 
 # Video files
 *.mp4
 *.mov
 *.avi
+
+# Playwright test artifacts
+/test-results/
+/playwright-report/
+/playwright/.cache/
