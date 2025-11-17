@@ -36,6 +36,22 @@ jobs:
         cd src/backend
         npm ci
     
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps chromium firefox webkit
+    
+    - name: Run E2E tests
+      run: npm run test:e2e
+      env:
+        CI: true
+    
+    - name: Upload Playwright Report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
+    
     - name: Check for security vulnerabilities
       run: npm audit --audit-level=high
       continue-on-error: true

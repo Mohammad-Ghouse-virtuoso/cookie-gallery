@@ -5,19 +5,21 @@ A modern, full-stack e-commerce application for a cookie store. Built with React
 ## ✨ Features
 
 ### 🔐 **Authentication & User Management**
+
 - Google OAuth and Phone OTP via Firebase
 - Role-based route protection
 - Automatic profile creation and Firestore integration
 - Persistent login with local storage
 
 ### 🛒 **E-commerce Functionality**
-- **Real-time cart (add, remove, update quantities)
-- **Razorpay integration with signature verification
-- **Order creation, verification, and tracking
-- **Live updates for cart and payment status
 
+- \*\*Real-time cart (add, remove, update quantities)
+- \*\*Razorpay integration with signature verification
+- \*\*Order creation, verification, and tracking
+- \*\*Live updates for cart and payment status
 
 ### 🎨 **User Interface & Experience**
+
 - Clean, responsive design with Tailwind CSS
 - Smooth transitions and hover animations
 - Animated testimonials with auto-scroll
@@ -25,7 +27,9 @@ A modern, full-stack e-commerce application for a cookie store. Built with React
 - Dedicated gifting journey at `/gift/:boxId` with a calm, tactile layout (modal fallback on small screens)
 
 Loading skeletons and animations
+
 ### 📱 **Additional Pages & Content**
+
 - Story (timeline view of brand journey)
 - Behind the Scenes (cookie-making process)
 - Privacy Policy
@@ -44,6 +48,7 @@ Loading skeletons and animations
 | [React Icons](https://react-icons.github.io/react-icons/) | Built-in Node Crypto                                                 |                                                             |                                   |
 
 ### 🎨 Warm Palette Tokens
+
 - `--bg-cream` & `--card-bg` — soft foundations for the gifting route
 - `--cocoa` & `--caramel` — primary action and accent tones
 - `--muted-ink` — secondary text color for longer copy
@@ -61,17 +66,19 @@ Loading skeletons and animations
 ### Installation & Setup
 
 # Clone repo
+
 git clone https://github.com/Mohammad-Ghouse-virtuoso/cookie-gallery.git
 cd cookie-gallery
 
 # Install frontend dependencies
+
 npm install
 
 # Install backend dependencies
+
 cd src/backend
 npm install
 cd ../..
-
 
 ### Environment Configuration
 
@@ -89,8 +96,8 @@ VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
 
 VITE_SHOW_AUTH_DIAGNOSTICS=true
 
-
 #### 2. **Backend Environment (\`src/backend/.env\`):**
+
 RAZORPAY_KEY_ID=rzp_test_YourPublicKeyHere
 RAZORPAY_KEY_SECRET=YourSecretKeyHere
 
@@ -101,13 +108,15 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYourPrivateKeyHere\n-----END 
 CORS_ORIGIN=http://localhost:5173
 PORT=5000
 
-
 #### 3. **Firebase Service Account Setup:**
+
 - Download your Firebase service account JSON file
 
 1. **Start the Backend Server:**
    \`\`\`bash
+
    # From project root
+
    cd src/backend
    node server.js
    \`\`\`
@@ -123,10 +132,13 @@ PORT=5000
 #### Production Build:
 
 \`\`\`bash
+
 # Build the frontend
+
 npm run build
 
 # Preview the build
+
 npm run preview
 \`\`\`
 
@@ -139,41 +151,89 @@ cookie-gallery/
 - `checkoutPageEnabled` — controls the lightweight cart modal plus dedicated checkout page flow. Enabled by default. Set `VITE_FEATURE_CHECKOUT_PAGE=false` in your frontend `.env` and restart the dev server to roll back to the legacy checkout modal experience.
 
 Suggested QA when toggling the flag:
+
 - Confirm the cart modal fits the viewport at 320 px, 768 px, and 1280 px with item scrolling confined inside the modal.
 - Use **Proceed to Checkout** to verify navigation to `/checkout` (or the legacy modal sequence when disabled).
 - Validate address capture, offline retry messaging, and post-payment verification before approving a release.
-├── public/
-├── src/
-│   ├── assets/
-│   ├── backend/
-│   │   ├── server.js
-│   │   ├── package.json
-│   │   ├── .env
-│   │   └── firebase-admin-sdk.json
-│   ├── components/
-│   │   ├── CookieCard.tsx
-│   │   ├── Hero.tsx
-│   │   ├── NavBar.tsx
-│   │   ├── ProtectedRoutes.tsx
-│   │   └── ReviewsSection.tsx
-│   ├── context/
-│   │   ├── AuthContext.tsx
-│   │   └── CartContext.tsx
-│   ├── data/
-│   ├── pages/
-│   │   ├── Home.tsx
-│   │   ├── CheckOut.tsx
-│   │   ├── SignIn.tsx
-│   │   ├── OrderSuccess.tsx
-│   │   ├── Story.tsx
-│   │   ├── BehindTheScenes.tsx
-│   │   └── PrivacyPolicy.tsx
-│   ├── types/
-│   └── utils/
-├── .env
-├── package.json
-└── README.md
+  ├── public/
+  ├── src/
+  │ ├── assets/
+  │ ├── backend/
+  │ │ ├── server.js
+  │ │ ├── package.json
+  │ │ ├── .env
+  │ │ └── firebase-admin-sdk.json
+  │ ├── components/
+  │ │ ├── CookieCard.tsx
+  │ │ ├── Hero.tsx
+  │ │ ├── NavBar.tsx
+  │ │ ├── ProtectedRoutes.tsx
+  │ │ └── ReviewsSection.tsx
+  │ ├── context/
+  │ │ ├── AuthContext.tsx
+  │ │ └── CartContext.tsx
+  │ ├── data/
+  │ ├── pages/
+  │ │ ├── Home.tsx
+  │ │ ├── CheckOut.tsx
+  │ │ ├── SignIn.tsx
+  │ │ ├── OrderSuccess.tsx
+  │ │ ├── Story.tsx
+  │ │ ├── BehindTheScenes.tsx
+  │ │ └── PrivacyPolicy.tsx
+  │ ├── types/
+  │ └── utils/
+  ├── .env
+  ├── package.json
+  └── README.md
 
+## 🧪 Testing
+
+### Unit & Integration Tests
+
+```bash
+# Run unit tests
+npm run test
+
+# Run tests in watch mode
+npm run test -- --watch
+```
+
+### End-to-End Tests
+
+Comprehensive E2E tests using Playwright covering shopping flow, checkout, authentication, and mobile responsiveness.
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run E2E tests in UI mode (interactive)
+npm run test:e2e:ui
+
+# Run E2E tests in headed mode (see browser)
+npm run test:e2e:headed
+
+# Run E2E tests in debug mode
+npm run test:e2e:debug
+
+# View test report
+npm run test:e2e:report
+
+# Run specific browser
+npx playwright test --project=chromium
+npx playwright test --project=firefox
+npx playwright test --project=webkit
+```
+
+**Test Coverage**: 54+ E2E tests covering:
+
+- Shopping flow (browse, add to cart, update quantities)
+- Checkout flow (form validation, payment, success page)
+- Authentication (sign in, sign out, protected routes)
+- Mobile responsive behavior (touch interactions, viewports)
+- Error scenarios (404, empty states, network errors)
+
+See [E2E_TEST_RESULTS.md](./E2E_TEST_RESULTS.md) for detailed test results.
 
 ## 🔒 Security Features
 
@@ -187,10 +247,12 @@ Suggested QA when toggling the flag:
 ## 🌐 API Endpoints
 
 ### Authentication
+
 - \`GET /health\` - Server health check with boot ID
 - \`POST /save-user\` - Save user profile to Firestore
 
 ### Payments
+
 - \`POST /create-order\` - Create new Razorpay order
 - \`POST /verify-signature\` - Verify payment signature
 - \`POST /save-order-data\` - Store order in database
