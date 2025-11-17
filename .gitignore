@@ -59,3 +59,9 @@ Thumbs.db
 *.mp4
 *.mov
 *.avi
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
