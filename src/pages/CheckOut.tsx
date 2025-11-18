@@ -7,6 +7,7 @@ import { cookies as cookieList } from "../data/cookies";
 import { formatPrice } from "../utils/formatPrice";
 import sadCookie from "../assets/Cookie!.png";
 import { useAuth } from '../context/AuthContext';
+import EmailPromptModal from '../components/EmailPromptModal';
 
 // This is the Razorpay script loader
 function loadScript(src: string): Promise<boolean> {
@@ -75,6 +76,10 @@ export default function Checkout() {
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [emailUpdateLoading, setEmailUpdateLoading] = useState(false);
+  const [emailUpdateError, setEmailUpdateError] = useState<string | null>(null);
+  const [shouldProceedToPayment, setShouldProceedToPayment] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -83,6 +88,15 @@ export default function Checkout() {
       setShowLoginPrompt(false);
     }
   }, [user]);
+
+  // Auto-trigger payment after email update
+  useEffect(() => {
+    if (shouldProceedToPayment && user?.email) {
+      setShouldProceedToPayment(false);
+      handlePayment();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldProceedToPayment, user]);
 
   const API_BASE = import.meta.env.VITE_API_BASE_URL;
   async function getIdToken(): Promise<string | null> {
@@ -97,6 +111,46 @@ export default function Checkout() {
     }
   }
 
+  const handleEmailUpdate = async (email: string) => {
+    setEmailUpdateLoading(true);
+    setEmailUpdateError(null);
+    
+    try {
+      const { getAuth, updateEmail } = await import('firebase/auth');
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      
+      if (!currentUser) {
+        setEmailUpdateError('User session expired. Please sign in again.');
+        setEmailUpdateLoading(false);
+        return;
+      }
+
+      // Update the email in Firebase Auth
+      await updateEmail(currentUser, email);
+      console.log('Email updated successfully in Firebase Auth');
+
+      // Close the modal and proceed to payment
+      setShowEmailPrompt(false);
+      setEmailUpdateLoading(false);
+      setShouldProceedToPayment(true);
+    } catch (error: any) {
+      console.error('Error updating email:', error);
+      let errorMessage = 'Failed to update email. Please try again.';
+      
+      if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address format.';
+      } else if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already in use by another account.';
+      } else if (error.code === 'auth/requires-recent-login') {
+        errorMessage = 'For security, please sign out and sign in again before updating your email.';
+      }
+      
+      setEmailUpdateError(errorMessage);
+      setEmailUpdateLoading(false);
+    }
+  };
+
   const handlePayment = async () => {
     console.log("handlePayment function started.");
     setMessage(null);
@@ -106,6 +160,14 @@ export default function Checkout() {
     if (!user) {
       setMessage("You must be logged in to proceed to payment.");
       setIsLoading(false);
+      return;
+    }
+
+    // Check if user has an email address
+    if (!user.email) {
+      console.log("User does not have an email address. Prompting for email.");
+      setIsLoading(false);
+      setShowEmailPrompt(true);
       return;
     }
 
@@ -289,6 +351,14 @@ export default function Checkout() {
           </div>
         </div>
       )}
+
+      <EmailPromptModal
+        isOpen={showEmailPrompt}
+        onSubmit={handleEmailUpdate}
+        onCancel={() => setShowEmailPrompt(false)}
+        isLoading={emailUpdateLoading}
+        error={emailUpdateError}
+      />
 
       <div className="w-full max-w-lg lg:max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden p-6 sm:p-8 space-y-6 relative">
         <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6">Your Order Summary</h1>
